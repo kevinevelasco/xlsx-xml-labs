@@ -9,9 +9,9 @@ import datetime
 def get_lang_detector(nlp, name):
     return LanguageDetector()
 #Excecute Natural Language processing in spanish to detect language
-#nlp = spacy.load("es_core_news_sm")
+nlp = spacy.load("es_core_news_sm")
 Language.factory("language_detector",func=get_lang_detector)
-#nlp.add_pipe('language_detector',last=True)
+nlp.add_pipe('language_detector',last=True)
 
 
 #Create Element Tree root class

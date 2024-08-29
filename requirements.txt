@@ -7,6 +7,7 @@ click==8.1.7
 cloudpathlib==0.18.1
 confection==0.1.5
 cymem==2.0.8
+es-core-news-sm @ https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.7.0/es_core_news_sm-3.7.0-py3-none-any.whl#sha256=61e6e5530941f5880166855f09f60d7e6ba79ec1e8e45f96244bdb1eb169eb1d
 idna==3.8
 iniconfig==2.0.0
 Jinja2==3.1.4
