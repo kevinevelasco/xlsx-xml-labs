@@ -13,6 +13,9 @@ nlp = spacy.load("es_core_news_sm")
 Language.factory("language_detector",func=get_lang_detector)
 nlp.add_pipe('language_detector',last=True)
 
+#insertamos <?xml version="1.0" encoding="UTF-8" standalone="yes"?> en el xml
+
+
 
 #Create Element Tree root class
 result = ET.Element("result")
@@ -61,6 +64,7 @@ for uid in column:
     if isinstance(temp_lab_created, datetime.datetime):
         temp_lab_created = temp_lab_created.strftime("%Y-%m-%d")
 
+
     items = ET.SubElement(result,"items")
     equipment= ET.SubElement(items,"equipment", externalId=temp_lab_id)
 
@@ -68,21 +72,37 @@ for uid in column:
     ET.SubElement(title, "text", locale="es_CO").text = temp_lab_es_name
     ET.SubElement(title, "text", locale="en_US").text = temp_lab_eng_name
 
+    type = ET.SubElement(equipment, "type", pureId="14992", uri="/dk/atira/pure/equipment/equipmenttypes/laboratory") #TODO toca eliminar ese placeHolder de pureId
+    category = ET.SubElement(equipment, "category", uri="/dk/atira/pure/equipment/category/classification") #TODO preguntarle a Francisco qué significa esto
+
+    org_units = ET.SubElement(equipment, "organisationalUnits")
+    org_unit = ET.SubElement(org_units, "organisationalUnit", externalId="218")
+    name = ET.SubElement(org_unit, "name", formatted="false")
+    ET.SubElement(name, "text", locale="es_CO").text = "Facultad de Ingeniería" #TODO placeholder
+    ET.SubElement(name, "text", locale="en_US").text = "Facultad de Ingeniería" #TODO placeholder
+
+    #TODO preguntarle a Francisco cómo poner una persona aparte de la organización
+
     # Descriptions
     descriptions = ET.SubElement(equipment, "descriptions")
-    description = ET.SubElement(descriptions, "description", pureId=temp_lab_id)
+    description = ET.SubElement(descriptions, "description", pureId=temp_lab_id) #TODO revisar qué poner en ese pureId
     value = ET.SubElement(description, "value", formatted="false")
     ET.SubElement(value, "text", locale="es_CO").text = temp_lab_es_description
     ET.SubElement(value, "text", locale="en_US").text = temp_lab_eng_description
     ET.SubElement(description, "type", uri="/dk/atira/pure/equipment/descriptions/equipmentdescription")
 
-    # Equipment details (placeholder for now, you can add real data if needed)
+    # Equipment details
     equipment_details = ET.SubElement(equipment, "equipmentDetails")
-    equipment_detail = ET.SubElement(equipment_details, "equipmentDetail", pureId=temp_lab_id)
+    equipment_detail = ET.SubElement(equipment_details, "equipmentDetail", pureId=temp_lab_id) #TODO revisar qué poner en ese pureId
     name_detail = ET.SubElement(equipment_detail, "name", formatted="true")
     ET.SubElement(name_detail, "text", locale="es_CO").text = "Detalle en español"
     ET.SubElement(name_detail, "text", locale="en_US").text = "Detail in English"
     ET.SubElement(equipment_detail, "acquisitionDate").text = temp_lab_created
+    # manufacturers = ET.SubElement(equipment_detail, "manufacturers")
+    # manufacturer = ET.SubElement(manufacturers, "manufacturer", pureId=temp_lab_id) #TODO revisar qué poner en ese pureId
+    # external_org_unit = ET.SubElement(manufacturer, "externalOrganisationalUnit", uuid="1df83989-a24d-440a-b847-df451e699af0") #TODO revisar qué poner en ese uuid
+    # eou_name = ET.SubElement(external_org_unit, "name", formatted="false")
+    # ET.SubElement(eou_name, "text", locale="es_CO").text = "Facultad de Ingeniería"
     
     # Managing Organizational Unit
     managing_org_unit = ET.SubElement(equipment, "managingOrganisationalUnit", externalId="218")
@@ -99,32 +119,48 @@ for uid in column:
     # Addresses
     addresses = ET.SubElement(equipment, "addresses")
     address = ET.SubElement(addresses, "address", pureId=temp_lab_id)
+    ET.SubElement(address, "addressType", uri="/dk/atira/pure/equipment/equipmentaddresstype/postal")
     ET.SubElement(address, "street").text = temp_lab_address
     ET.SubElement(address, "building").text = "Edificio José Gabriel Maldonado S.J.-Laboratorios"  # Placeholder
     ET.SubElement(address, "city").text = "Bogotá D.C."  # Placeholder
-    ET.SubElement(address, "country", uri="/dk/atira/pure/core/countries/co").text = "Colombia"  # Placeholder
+    ET.SubElement(address, "country", uri="/dk/atira/pure/core/countries/co")
 
     # Phone Numbers
     phone_numbers = ET.SubElement(equipment, "phoneNumbers")
-    phone_number = ET.SubElement(phone_numbers, "phoneNumber", pureId=temp_lab_id)
-    ET.SubElement(phone_number, "value", formatted="false").text = str(temp_lab_phone)
+    phone_number = ET.SubElement(phone_numbers, "phoneNumber", pureId=temp_lab_id) #TODO revisar qué poner en ese pureId
+    ET.SubElement(phone_number, "value", formatted="true").text = str(temp_lab_phone)
     ET.SubElement(phone_number, "type", uri="/dk/atira/pure/equipment/equipmentphonenumbertype/phone")
 
     # Web Addresses
-    web_addresses = ET.SubElement(equipment, "webAddresses")
-    web_address = ET.SubElement(web_addresses, "webAddress", pureId=temp_lab_id)
-    ET.SubElement(web_address, "value", formatted="false").text = temp_lab_url
-    ET.SubElement(web_address, "type", uri="/dk/atira/pure/equipment/equipmentwebaddresstype/website")
+    if temp_lab_url != "":
+        web_addresses = ET.SubElement(equipment, "webAddresses")
+        web_address = ET.SubElement(web_addresses, "webAddress", pureId=temp_lab_id) #TODO revisar qué poner en ese pureId
+        web_address_value = ET.SubElement(web_address, "value", formatted="false")
+        ET.SubElement(web_address_value, "text", locale="es_CO").text = temp_lab_url
+        ET.SubElement(web_address_value, "text", locale="en_US").text = temp_lab_url
+        ET.SubElement(web_address, "type", uri="/dk/atira/pure/equipment/equipmentwebaddresstype/website")
 
     # Loan Type
-    loan_type = ET.SubElement(equipment, "loanType", uri="/dk/atira/pure/equipment/loantypes/internalexternal")
-    loan_type.text = temp_lab_loan_type
+    #set to lowercase and trim any space
+    
+    temp_lab_loan_type = temp_lab_loan_type.lower().strip()
+    if temp_lab_loan_type == "ambos":
+        temp_lab_loan_type = "/dk/atira/pure/equipment/loantypes/internalexternal"
+    elif temp_lab_loan_type == "interno":
+        temp_lab_loan_type = "/dk/atira/pure/equipment/loantypes/internal"
+    else:
+        temp_lab_loan_type = "/dk/atira/pure/equipment/loantypes/notavailable"
 
-    # Keywords (assuming temp_lab_keywords is a string with keywords separated by commas)
+    loan_type = ET.SubElement(equipment, "loanType", uri=temp_lab_loan_type)
+    
+
+
+
+    # Keywords 
     keyword_groups = ET.SubElement(equipment, "keywordGroups")
-    keyword_group = ET.SubElement(keyword_groups, "keywordGroup", logicalName="keywordContainers", pureId=temp_lab_id)
+    keyword_group = ET.SubElement(keyword_groups, "keywordGroup", logicalName="keywordContainers", pureId=temp_lab_id) #TODO revisar qué poner en ese pureId
     keyword_containers = ET.SubElement(keyword_group, "keywordContainers")
-    keyword_container = ET.SubElement(keyword_containers, "keywordContainer", pureId=temp_lab_id)
+    keyword_container = ET.SubElement(keyword_containers, "keywordContainer", pureId=temp_lab_id) #TODO revisar qué poner en ese pureId
     free_keywords = ET.SubElement(keyword_container, "freeKeywords")
     
     # Split keywords and add them to the XML
@@ -136,11 +172,15 @@ for uid in column:
 tree = ET.ElementTree(result)
 xml_str = ET.tostring(result, encoding="unicode", method="xml")
 
-# Save to a file (optional)
-with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_09_02_KV_V1.xml', "w", encoding="utf-8") as f:
+# Save to a file
+with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_09_04_KV_V2.xml', "w", encoding="utf-8") as f:
+    # Escribir la declaración manualmente
+    f.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n')
+    # Escribir el contenido del árbol XML
     f.write(xml_str)
 
 print("xml generado")
+
 
 
 
