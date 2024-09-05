@@ -1,31 +1,17 @@
 import pandas as pd
 from spacy.language import Language
 from spacy_langdetect import LanguageDetector
-import spacy
 import xml.etree.ElementTree as ET
 import datetime
-
-# Define language detector 
-def get_lang_detector(nlp, name):
-    return LanguageDetector()
-#Excecute Natural Language processing in spanish to detect language
-nlp = spacy.load("es_core_news_sm")
-Language.factory("language_detector",func=get_lang_detector)
-nlp.add_pipe('language_detector',last=True)
-
-#insertamos <?xml version="1.0" encoding="UTF-8" standalone="yes"?> en el xml
-
-
 
 #Create Element Tree root class
 result = ET.Element("result")
 result.set('xmlns:xsi',"http://www.w3.org/2001/XMLSchema-instance")
 result.set('xsi:schemaLocation',"http://localhost:8080/ws/api/524/xsd/schema1.xsd")
+items = ET.SubElement(result,"items")
 
 #Read excel and convert to dataframe
 dataframe1 = pd.read_excel(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Excel\Formato Infraestructura - Perfiles y Capacidades.xlsx', sheet_name='Laboratorios', dtype=object)
-
-#print(dataframe1.head())
 
 column = dataframe1.id_unico.unique()
 
@@ -64,8 +50,6 @@ for uid in column:
     if isinstance(temp_lab_created, datetime.datetime):
         temp_lab_created = temp_lab_created.strftime("%Y-%m-%d")
 
-
-    items = ET.SubElement(result,"items")
     equipment= ET.SubElement(items,"equipment", externalId=temp_lab_id)
 
     title = ET.SubElement(equipment, "title", formatted="true")
@@ -75,13 +59,17 @@ for uid in column:
     type = ET.SubElement(equipment, "type", pureId="14992", uri="/dk/atira/pure/equipment/equipmenttypes/laboratory") #TODO toca eliminar ese placeHolder de pureId
     category = ET.SubElement(equipment, "category", uri="/dk/atira/pure/equipment/category/classification") #TODO preguntarle a Francisco qué significa esto
 
+    person_associations = ET.SubElement(equipment, "personAssociations")
+    person_association = ET.SubElement(person_associations, "personAssociation")
+    ET.SubElement(person_association, "personId").text = temp_lab_person_id
+
     org_units = ET.SubElement(equipment, "organisationalUnits")
     org_unit = ET.SubElement(org_units, "organisationalUnit", externalId="218")
     name = ET.SubElement(org_unit, "name", formatted="false")
     ET.SubElement(name, "text", locale="es_CO").text = "Facultad de Ingeniería" #TODO placeholder
     ET.SubElement(name, "text", locale="en_US").text = "Facultad de Ingeniería" #TODO placeholder
 
-    #TODO preguntarle a Francisco cómo poner una persona aparte de la organización
+
 
     # Descriptions
     descriptions = ET.SubElement(equipment, "descriptions")
@@ -153,9 +141,6 @@ for uid in column:
 
     loan_type = ET.SubElement(equipment, "loanType", uri=temp_lab_loan_type)
     
-
-
-
     # Keywords 
     keyword_groups = ET.SubElement(equipment, "keywordGroups")
     keyword_group = ET.SubElement(keyword_groups, "keywordGroup", logicalName="keywordContainers", pureId=temp_lab_id) #TODO revisar qué poner en ese pureId
@@ -173,7 +158,7 @@ tree = ET.ElementTree(result)
 xml_str = ET.tostring(result, encoding="unicode", method="xml")
 
 # Save to a file
-with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_09_04_KV_V2.xml', "w", encoding="utf-8") as f:
+with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_09_04_LABS_KV_V3.xml', "w", encoding="utf-8") as f:
     # Escribir la declaración manualmente
     f.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n')
     # Escribir el contenido del árbol XML
