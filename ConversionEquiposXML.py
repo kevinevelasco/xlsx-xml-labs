@@ -11,57 +11,65 @@ result.set('xsi:schemaLocation',"http://localhost:8080/ws/api/524/xsd/schema1.xs
 items = ET.SubElement(result,"items")
 
 #Read excel and convert to dataframe
-dataframe1 = pd.read_excel(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Excel\Formato Infraestructura - Perfiles y Capacidades.xlsx', sheet_name='Laboratorios', dtype=object)
+dataframe1 = pd.read_excel(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Excel\Formato Infraestructura - Perfiles y Capacidades.xlsx', sheet_name='Equipos', dtype=object)
 
-column = dataframe1.id_unico.unique()
+column = dataframe1.id_ubicacion.unique()
 
 for uid in column:
     #Create Element Tree root class
-    temp_lab = dataframe1[dataframe1["id_unico"]==uid]
-    temp_lab_id = str(uid)
-    temp_lab_type = temp_lab["Tipo"].values[0]
-    temp_lab_eng_name = temp_lab["Nombre Inglés"].values[0]
-    temp_lab_es_name = temp_lab["Nombre español"].values[0]
-    temp_lab_eng_description = temp_lab["Descripción Inglés"].values[0]
-    temp_lab_es_description = temp_lab["Descripción Español"].values[0]
-    temp_lab_address = temp_lab["Dirección"].values[0]
-    temp_lab_phone = temp_lab["Número de contacto"].values[0]
-    temp_lab_url = temp_lab["URL"].values[0]
-    temp_lab_person = temp_lab["Nombre encargado"].values[0]
-    temp_lab_person_id = temp_lab["ID Empleado"].values[0]
-    temp_lab_created = temp_lab["Fecha creación Laboratorios"].values[0]
-    temp_lab_unidad = "Departamento de Ingeniería de Sistemas"
-    temp_lab_loan_type = temp_lab["Disponible para préstamo"].values[0]
-    temp_lab_keywords = temp_lab["Palabras clave"].values[0]
-    # temp_lab_services = temp_lab["Servicios del Laboratorio"].values[0]
-    # temp_lab_certifications = temp_lab["Certificaciones"].values[0]
+    temp_eq = dataframe1[dataframe1["id_ubicacion"]==uid]
+    temp_eq_id = str(uid)
+    temp_eq_id_lab = temp_eq["id-lab"].values[0]
+    temp_eq_lab_es_name = temp_eq["Espacio ubicación"].values[0]
+    temp_eq_plaqueta = temp_eq["ID Plaqueta (Activos Fijos)"].values[0]
+    temp_eq_es_name = temp_eq["Nombre equipo español"].values[0]
+    temp_eq_eng_name = temp_eq["Nombre equipo ingles"].values[0]
+    temp_eq_es_description = temp_eq["Descripción español"].values[0]
+    temp_eq_eng_description = temp_eq["Descripción ingles"].values[0]
+    temp_eq_adquisicion = temp_eq["Fecha de adquisición"].values[0]
+    temp_eq_baja = temp_eq["Fecha estimada baja (Vida útil)"].values[0]
+    temp_eq_siu = temp_eq["Id SIU responsable"].values[0]
+    temp_eq_model = temp_eq["Modelo"].values[0]
+    temp_eq_fabricante = temp_eq["Nombre fabricante"].values[0]
+    temp_eq_pais_fabricante = temp_eq["Pais fabricante"].values[0]
+    temp_eq_loan_type = temp_eq["Disponible para prestamo (interno/externo/ambos)"].values[0]
+    temp_eq_keywords = temp_eq["Palabras clave"].values[0]
+    temp_eq_services = temp_eq["Servicios"].values[0]
 
-     #Detect empty fields and replacing with empty text
-    if (isinstance(temp_lab_address,int) | isinstance(temp_lab_address,float)):
-        temp_project_description = ""
+    if (isinstance(temp_eq_es_description,str)):
+        temp_eq_es_description = temp_eq_es_description
     else:
-        temp_project_description = temp_lab_address.replace("\n"," ")
-
-    if (isinstance(temp_lab_url,str)):
-        temp_lab_url = temp_lab_url
+        temp_eq_es_description = ""
+    
+    if (isinstance(temp_eq_eng_description,str)):
+        temp_eq_eng_description = temp_eq_eng_description
     else:
-        temp_lab_url = ""
+        temp_eq_eng_description = ""
 
-    if isinstance(temp_lab_created, datetime.datetime):
-        temp_lab_created = temp_lab_created.strftime("%Y-%m-%d")
+    if isinstance(temp_eq_adquisicion, datetime.datetime):
+        temp_eq_adquisicion = temp_eq_adquisicion.strftime("%Y-%m-%d")
 
-    equipment= ET.SubElement(items,"equipment", externalId=temp_lab_id)
+    if isinstance(temp_eq_baja, datetime.datetime):
+        temp_eq_baja = temp_eq_baja.strftime("%Y-%m-%d")
+
+
+    if isinstance(temp_eq_model, str):
+        temp_eq_model = temp_eq_model
+    else:
+        temp_eq_model = ""
+
+    equipment= ET.SubElement(items,"equipment", externalId=temp_eq_id)
 
     title = ET.SubElement(equipment, "title", formatted="true")
-    ET.SubElement(title, "text", locale="es_CO").text = temp_lab_es_name
-    ET.SubElement(title, "text", locale="en_US").text = temp_lab_eng_name
+    ET.SubElement(title, "text", locale="es_CO").text = temp_eq_es_name
+    ET.SubElement(title, "text", locale="en_US").text = temp_eq_eng_name
 
-    type = ET.SubElement(equipment, "type", pureId="14992", uri="/dk/atira/pure/equipment/equipmenttypes/laboratory") #TODO toca eliminar ese placeHolder de pureId
+    type = ET.SubElement(equipment, "type", pureId="14992", uri="/dk/atira/pure/equipment/equipmenttypes/equipment") #TODO toca eliminar ese placeHolder de pureId
     category = ET.SubElement(equipment, "category", uri="/dk/atira/pure/equipment/category/classification") #TODO preguntarle a Francisco qué significa esto
 
     person_associations = ET.SubElement(equipment, "personAssociations")
     person_association = ET.SubElement(person_associations, "personAssociation")
-    ET.SubElement(person_association, "personId").text = temp_lab_person_id
+    ET.SubElement(person_association, "personId").text = temp_eq_person_id
 
     org_units = ET.SubElement(equipment, "organisationalUnits")
     org_unit = ET.SubElement(org_units, "organisationalUnit", externalId="218")
@@ -73,21 +81,21 @@ for uid in column:
 
     # Descriptions
     descriptions = ET.SubElement(equipment, "descriptions")
-    description = ET.SubElement(descriptions, "description", pureId=temp_lab_id) #TODO revisar qué poner en ese pureId
+    description = ET.SubElement(descriptions, "description", pureId=temp_eq_id) #TODO revisar qué poner en ese pureId
     value = ET.SubElement(description, "value", formatted="false")
-    ET.SubElement(value, "text", locale="es_CO").text = temp_lab_es_description
-    ET.SubElement(value, "text", locale="en_US").text = temp_lab_eng_description
+    ET.SubElement(value, "text", locale="es_CO").text = temp_eq_es_description
+    ET.SubElement(value, "text", locale="en_US").text = temp_eq_eng_description
     ET.SubElement(description, "type", uri="/dk/atira/pure/equipment/descriptions/equipmentdescription")
 
     # Equipment details
     equipment_details = ET.SubElement(equipment, "equipmentDetails")
-    equipment_detail = ET.SubElement(equipment_details, "equipmentDetail", pureId=temp_lab_id) #TODO revisar qué poner en ese pureId
+    equipment_detail = ET.SubElement(equipment_details, "equipmentDetail", pureId=temp_eq_id) #TODO revisar qué poner en ese pureId
     name_detail = ET.SubElement(equipment_detail, "name", formatted="true")
     ET.SubElement(name_detail, "text", locale="es_CO").text = "Detalle en español"
     ET.SubElement(name_detail, "text", locale="en_US").text = "Detail in English"
-    ET.SubElement(equipment_detail, "acquisitionDate").text = temp_lab_created
+    ET.SubElement(equipment_detail, "acquisitionDate").text = temp_eq_created
     # manufacturers = ET.SubElement(equipment_detail, "manufacturers")
-    # manufacturer = ET.SubElement(manufacturers, "manufacturer", pureId=temp_lab_id) #TODO revisar qué poner en ese pureId
+    # manufacturer = ET.SubElement(manufacturers, "manufacturer", pureId=temp_eq_id) #TODO revisar qué poner en ese pureId
     # external_org_unit = ET.SubElement(manufacturer, "externalOrganisationalUnit", uuid="1df83989-a24d-440a-b847-df451e699af0") #TODO revisar qué poner en ese uuid
     # eou_name = ET.SubElement(external_org_unit, "name", formatted="false")
     # ET.SubElement(eou_name, "text", locale="es_CO").text = "Facultad de Ingeniería"
@@ -100,56 +108,56 @@ for uid in column:
 
     # Contact Persons
     contact_persons = ET.SubElement(equipment, "contactPersons")
-    contact_person = ET.SubElement(contact_persons, "contactPerson", externalId=temp_lab_person_id)
+    contact_person = ET.SubElement(contact_persons, "contactPerson", externalId=temp_eq_person_id)
     name_contact = ET.SubElement(contact_person, "name", formatted="false")
-    ET.SubElement(name_contact, "text").text = temp_lab_person
+    ET.SubElement(name_contact, "text").text = temp_eq_person
 
     # Addresses
     addresses = ET.SubElement(equipment, "addresses")
-    address = ET.SubElement(addresses, "address", pureId=temp_lab_id)
+    address = ET.SubElement(addresses, "address", pureId=temp_eq_id)
     ET.SubElement(address, "addressType", uri="/dk/atira/pure/equipment/equipmentaddresstype/postal")
-    ET.SubElement(address, "street").text = temp_lab_address
+    ET.SubElement(address, "street").text = temp_eq_address
     ET.SubElement(address, "building").text = "Edificio José Gabriel Maldonado S.J.-Laboratorios"  # Placeholder
     ET.SubElement(address, "city").text = "Bogotá D.C."  # Placeholder
     ET.SubElement(address, "country", uri="/dk/atira/pure/core/countries/co")
 
     # Phone Numbers
     phone_numbers = ET.SubElement(equipment, "phoneNumbers")
-    phone_number = ET.SubElement(phone_numbers, "phoneNumber", pureId=temp_lab_id) #TODO revisar qué poner en ese pureId
-    ET.SubElement(phone_number, "value", formatted="true").text = str(temp_lab_phone)
+    phone_number = ET.SubElement(phone_numbers, "phoneNumber", pureId=temp_eq_id) #TODO revisar qué poner en ese pureId
+    ET.SubElement(phone_number, "value", formatted="true").text = str(temp_eq_phone)
     ET.SubElement(phone_number, "type", uri="/dk/atira/pure/equipment/equipmentphonenumbertype/phone")
 
     # Web Addresses
-    if temp_lab_url != "":
+    if temp_eq_url != "":
         web_addresses = ET.SubElement(equipment, "webAddresses")
-        web_address = ET.SubElement(web_addresses, "webAddress", pureId=temp_lab_id) #TODO revisar qué poner en ese pureId
+        web_address = ET.SubElement(web_addresses, "webAddress", pureId=temp_eq_id) #TODO revisar qué poner en ese pureId
         web_address_value = ET.SubElement(web_address, "value", formatted="false")
-        ET.SubElement(web_address_value, "text", locale="es_CO").text = temp_lab_url
-        ET.SubElement(web_address_value, "text", locale="en_US").text = temp_lab_url
+        ET.SubElement(web_address_value, "text", locale="es_CO").text = temp_eq_url
+        ET.SubElement(web_address_value, "text", locale="en_US").text = temp_eq_url
         ET.SubElement(web_address, "type", uri="/dk/atira/pure/equipment/equipmentwebaddresstype/website")
 
     # Loan Type
     #set to lowercase and trim any space
     
-    temp_lab_loan_type = temp_lab_loan_type.lower().strip()
-    if temp_lab_loan_type == "ambos":
-        temp_lab_loan_type = "/dk/atira/pure/equipment/loantypes/internalexternal"
-    elif temp_lab_loan_type == "interno":
-        temp_lab_loan_type = "/dk/atira/pure/equipment/loantypes/internal"
+    temp_eq_loan_type = temp_eq_loan_type.lower().strip()
+    if temp_eq_loan_type == "ambos":
+        temp_eq_loan_type = "/dk/atira/pure/equipment/loantypes/internalexternal"
+    elif temp_eq_loan_type == "interno":
+        temp_eq_loan_type = "/dk/atira/pure/equipment/loantypes/internal"
     else:
-        temp_lab_loan_type = "/dk/atira/pure/equipment/loantypes/notavailable"
+        temp_eq_loan_type = "/dk/atira/pure/equipment/loantypes/notavailable"
 
-    loan_type = ET.SubElement(equipment, "loanType", uri=temp_lab_loan_type)
+    loan_type = ET.SubElement(equipment, "loanType", uri=temp_eq_loan_type)
     
     # Keywords 
     keyword_groups = ET.SubElement(equipment, "keywordGroups")
-    keyword_group = ET.SubElement(keyword_groups, "keywordGroup", logicalName="keywordContainers", pureId=temp_lab_id) #TODO revisar qué poner en ese pureId
+    keyword_group = ET.SubElement(keyword_groups, "keywordGroup", logicalName="keywordContainers", pureId=temp_eq_id) #TODO revisar qué poner en ese pureId
     keyword_containers = ET.SubElement(keyword_group, "keywordContainers")
-    keyword_container = ET.SubElement(keyword_containers, "keywordContainer", pureId=temp_lab_id) #TODO revisar qué poner en ese pureId
+    keyword_container = ET.SubElement(keyword_containers, "keywordContainer", pureId=temp_eq_id) #TODO revisar qué poner en ese pureId
     free_keywords = ET.SubElement(keyword_container, "freeKeywords")
     
     # Split keywords and add them to the XML
-    for keyword in temp_lab_keywords.split(','):
+    for keyword in temp_eq_keywords.split(','):
         free_keyword = ET.SubElement(free_keywords, "freeKeyword", locale="es_CO")
         free_keyword.text = keyword.strip()
 
