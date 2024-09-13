@@ -12,7 +12,7 @@ items = ET.SubElement(result,"items")
 
 #Read excel and convert to dataframe
 dataframe1 = pd.read_excel(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Excel\Formato Infraestructura - Perfiles y Capacidades.xlsx', sheet_name='Equipos', dtype=object)
-
+dataframe1 = dataframe1.fillna('')
 column = dataframe1.id_ubicacion.unique()
 
 for uid in column:
@@ -48,9 +48,13 @@ for uid in column:
 
     if isinstance(temp_eq_adquisicion, datetime.datetime):
         temp_eq_adquisicion = temp_eq_adquisicion.strftime("%Y-%m-%d")
+    else:
+        temp_eq_adquisicion = ""
 
     if isinstance(temp_eq_baja, datetime.datetime):
         temp_eq_baja = temp_eq_baja.strftime("%Y-%m-%d")
+    else: 
+        temp_eq_baja = ""
 
 
     if isinstance(temp_eq_model, str):
@@ -58,18 +62,42 @@ for uid in column:
     else:
         temp_eq_model = ""
 
+    if temp_eq_model == "No aporta" or temp_eq_model == "-" or temp_eq_model == "":
+        temp_eq_model = ""
+    else:
+        temp_eq_model = temp_eq_model
+
+
+    if isinstance(temp_eq_fabricante, str):
+        temp_eq_model = temp_eq_model
+    else:
+        temp_eq_model = ""
+
+    #si el nombre es No aporta, -, o vacío, se le asigna "" para que quede vacío
+    if temp_eq_fabricante == "No aporta" or temp_eq_fabricante == "-" or temp_eq_fabricante == "":
+        temp_eq_fabricante = ""
+    else:
+        temp_eq_fabricante = temp_eq_fabricante
+
+    if isinstance(temp_eq_services, str):
+        temp_eq_services = temp_eq_services
+    else:
+        temp_eq_services = ""
+
+
+
     equipment= ET.SubElement(items,"equipment", externalId=temp_eq_id)
 
     title = ET.SubElement(equipment, "title", formatted="true")
     ET.SubElement(title, "text", locale="es_CO").text = temp_eq_es_name
     ET.SubElement(title, "text", locale="en_US").text = temp_eq_eng_name
 
-    type = ET.SubElement(equipment, "type", pureId="14992", uri="/dk/atira/pure/equipment/equipmenttypes/equipment") #TODO toca eliminar ese placeHolder de pureId
+    type = ET.SubElement(equipment, "type", pureId="14992", uri="/dk/atira/pure/equipment/equipmenttypes/equipment") 
     category = ET.SubElement(equipment, "category", uri="/dk/atira/pure/equipment/category/classification") #TODO preguntarle a Francisco qué significa esto
 
-    person_associations = ET.SubElement(equipment, "personAssociations")
-    person_association = ET.SubElement(person_associations, "personAssociation")
-    ET.SubElement(person_association, "personId").text = temp_eq_person_id
+    # person_associations = ET.SubElement(equipment, "personAssociations")
+    # person_association = ET.SubElement(person_associations, "personAssociation")
+    # ET.SubElement(person_association, "personId").text = temp_eq_i
 
     org_units = ET.SubElement(equipment, "organisationalUnits")
     org_unit = ET.SubElement(org_units, "organisationalUnit", externalId="218")
@@ -88,17 +116,23 @@ for uid in column:
     ET.SubElement(description, "type", uri="/dk/atira/pure/equipment/descriptions/equipmentdescription")
 
     # Equipment details
-    equipment_details = ET.SubElement(equipment, "equipmentDetails")
-    equipment_detail = ET.SubElement(equipment_details, "equipmentDetail", pureId=temp_eq_id) #TODO revisar qué poner en ese pureId
-    name_detail = ET.SubElement(equipment_detail, "name", formatted="true")
-    ET.SubElement(name_detail, "text", locale="es_CO").text = "Detalle en español"
-    ET.SubElement(name_detail, "text", locale="en_US").text = "Detail in English"
-    ET.SubElement(equipment_detail, "acquisitionDate").text = temp_eq_created
-    # manufacturers = ET.SubElement(equipment_detail, "manufacturers")
-    # manufacturer = ET.SubElement(manufacturers, "manufacturer", pureId=temp_eq_id) #TODO revisar qué poner en ese pureId
-    # external_org_unit = ET.SubElement(manufacturer, "externalOrganisationalUnit", uuid="1df83989-a24d-440a-b847-df451e699af0") #TODO revisar qué poner en ese uuid
-    # eou_name = ET.SubElement(external_org_unit, "name", formatted="false")
-    # ET.SubElement(eou_name, "text", locale="es_CO").text = "Facultad de Ingeniería"
+    if temp_eq_adquisicion and temp_eq_baja and temp_eq_fabricante != "":
+        equipment_details = ET.SubElement(equipment, "equipmentDetails")
+        equipment_detail = ET.SubElement(equipment_details, "equipmentDetail", pureId=str(temp_eq_plaqueta))#TODO REVISAR si aquí si debería ir ese tipo de ID, es decir el de id SIU RESPONSABLE
+        name_detail = ET.SubElement(equipment_detail, "name", formatted="true")
+        ET.SubElement(name_detail, "text", locale="es_CO").text = "Detalle en español"
+        ET.SubElement(name_detail, "text", locale="en_US").text = "Detail in English"
+        if temp_eq_adquisicion != "":
+            ET.SubElement(equipment_detail, "acquisitionDate").text = temp_eq_adquisicion
+        if temp_eq_baja != "":
+            ET.SubElement(equipment_detail, "decommissionDate").text = temp_eq_baja
+        #TODO preguntarle a Francisco dónde debería ir el modelo
+        if temp_eq_fabricante != "":
+            manufacturers = ET.SubElement(equipment_detail, "manufacturers")
+            manufacturer = ET.SubElement(manufacturers, "manufacturer", pureId=temp_eq_id) #TODO revisar qué poner en ese pureId
+            external_org_unit = ET.SubElement(manufacturer, "externalOrganisationalUnit", uuid="1df83989-a24d-440a-b847-df451e699af0") #TODO uuid como placeholder
+            eou_name = ET.SubElement(external_org_unit, "name", formatted="false")
+            ET.SubElement(eou_name, "text", locale="es_CO").text = temp_eq_fabricante
     
     # Managing Organizational Unit
     managing_org_unit = ET.SubElement(equipment, "managingOrganisationalUnit", externalId="218")
@@ -107,34 +141,11 @@ for uid in column:
     ET.SubElement(name_org, "text", locale="en_US").text = "Facultad de Ingeniería"
 
     # Contact Persons
-    contact_persons = ET.SubElement(equipment, "contactPersons")
-    contact_person = ET.SubElement(contact_persons, "contactPerson", externalId=temp_eq_person_id)
-    name_contact = ET.SubElement(contact_person, "name", formatted="false")
-    ET.SubElement(name_contact, "text").text = temp_eq_person
+    # contact_persons = ET.SubElement(equipment, "contactPersons")
+    # contact_person = ET.SubElement(contact_persons, "contactPerson", externalId=temp_eq_person_id)
+    # name_contact = ET.SubElement(contact_person, "name", formatted="false")
+    # ET.SubElement(name_contact, "text").text = temp_eq_person
 
-    # Addresses
-    addresses = ET.SubElement(equipment, "addresses")
-    address = ET.SubElement(addresses, "address", pureId=temp_eq_id)
-    ET.SubElement(address, "addressType", uri="/dk/atira/pure/equipment/equipmentaddresstype/postal")
-    ET.SubElement(address, "street").text = temp_eq_address
-    ET.SubElement(address, "building").text = "Edificio José Gabriel Maldonado S.J.-Laboratorios"  # Placeholder
-    ET.SubElement(address, "city").text = "Bogotá D.C."  # Placeholder
-    ET.SubElement(address, "country", uri="/dk/atira/pure/core/countries/co")
-
-    # Phone Numbers
-    phone_numbers = ET.SubElement(equipment, "phoneNumbers")
-    phone_number = ET.SubElement(phone_numbers, "phoneNumber", pureId=temp_eq_id) #TODO revisar qué poner en ese pureId
-    ET.SubElement(phone_number, "value", formatted="true").text = str(temp_eq_phone)
-    ET.SubElement(phone_number, "type", uri="/dk/atira/pure/equipment/equipmentphonenumbertype/phone")
-
-    # Web Addresses
-    if temp_eq_url != "":
-        web_addresses = ET.SubElement(equipment, "webAddresses")
-        web_address = ET.SubElement(web_addresses, "webAddress", pureId=temp_eq_id) #TODO revisar qué poner en ese pureId
-        web_address_value = ET.SubElement(web_address, "value", formatted="false")
-        ET.SubElement(web_address_value, "text", locale="es_CO").text = temp_eq_url
-        ET.SubElement(web_address_value, "text", locale="en_US").text = temp_eq_url
-        ET.SubElement(web_address, "type", uri="/dk/atira/pure/equipment/equipmentwebaddresstype/website")
 
     # Loan Type
     #set to lowercase and trim any space
@@ -148,6 +159,19 @@ for uid in column:
         temp_eq_loan_type = "/dk/atira/pure/equipment/loantypes/notavailable"
 
     loan_type = ET.SubElement(equipment, "loanType", uri=temp_eq_loan_type)
+
+    #si los servicios contienen | lo convierte en coma
+    temp_lab_services = temp_eq_services.replace("|",",")
+
+    if temp_lab_services != "":
+        loan_term = ET.SubElement(equipment, "loanTerm")
+        ET.SubElement(loan_term, "text", locale="es_CO").text = temp_lab_services
+
+    #parents
+    parents_group = ET.SubElement(equipment, "parents")
+    parent = ET.SubElement(parents_group, "parent", externalId=temp_eq_id_lab)
+    parent_name = ET.SubElement(parent, "name", formatted="false")
+    ET.SubElement(parent_name, "text", locale="es_CO").text = temp_eq_lab_es_name
     
     # Keywords 
     keyword_groups = ET.SubElement(equipment, "keywordGroups")
@@ -166,7 +190,7 @@ tree = ET.ElementTree(result)
 xml_str = ET.tostring(result, encoding="unicode", method="xml")
 
 # Save to a file
-with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_09_04_EQUIPOS_KV_V1.xml', "w", encoding="utf-8") as f:
+with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_09_13_EQUIPOS_KV_V1.xml', "w", encoding="utf-8") as f:
     # Escribir la declaración manualmente
     f.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n')
     # Escribir el contenido del árbol XML

@@ -19,7 +19,8 @@ for uid in column:
     #Create Element Tree root class
     temp_lab = dataframe1[dataframe1["id_unico"]==uid]
     temp_lab_id = str(uid)
-    temp_lab_type = temp_lab["Tipo"].values[0]
+    temp_lab_area = temp_lab["Area"].values[0]
+    temp_lab_area_id = temp_lab["area-id"].values[0]
     temp_lab_eng_name = temp_lab["Nombre Inglés"].values[0]
     temp_lab_es_name = temp_lab["Nombre español"].values[0]
     temp_lab_eng_description = temp_lab["Descripción Inglés"].values[0]
@@ -33,8 +34,8 @@ for uid in column:
     temp_lab_unidad = "Departamento de Ingeniería de Sistemas"
     temp_lab_loan_type = temp_lab["Disponible para préstamo"].values[0]
     temp_lab_keywords = temp_lab["Palabras clave"].values[0]
-    # temp_lab_services = temp_lab["Servicios del Laboratorio"].values[0]
-    # temp_lab_certifications = temp_lab["Certificaciones"].values[0]
+    temp_lab_services = temp_lab["Servicios del Laboratorio"].values[0]
+    temp_lab_certifications = temp_lab["Certificaciones"].values[0]
 
      #Detect empty fields and replacing with empty text
     if (isinstance(temp_lab_address,int) | isinstance(temp_lab_address,float)):
@@ -139,7 +140,20 @@ for uid in column:
     else:
         temp_lab_loan_type = "/dk/atira/pure/equipment/loantypes/notavailable"
 
+    #Loan terms and certifications
+    if temp_lab_certifications != "No aplica":
+        #concatenamos las certificaciones a los servicios
+        temp_lab_services = temp_lab_services + " " + temp_lab_certifications
+
     loan_type = ET.SubElement(equipment, "loanType", uri=temp_lab_loan_type)
+    loan_term = ET.SubElement(equipment, "loanTerm")
+    ET.SubElement(loan_term, "text", locale="es_CO").text = temp_lab_services
+
+    #parents
+    parents_group = ET.SubElement(equipment, "parents")
+    parent = ET.SubElement(parents_group, "parent", externalId=temp_lab_area_id)
+    parent_name = ET.SubElement(parent, "name", formatted="false")
+    ET.SubElement(parent_name, "text", locale="es_CO").text = temp_lab_area
     
     # Keywords 
     keyword_groups = ET.SubElement(equipment, "keywordGroups")
@@ -158,7 +172,7 @@ tree = ET.ElementTree(result)
 xml_str = ET.tostring(result, encoding="unicode", method="xml")
 
 # Save to a file
-with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_09_04_LABS_KV_V3.xml', "w", encoding="utf-8") as f:
+with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_09_13_LABS_KV_V5.xml', "w", encoding="utf-8") as f:
     # Escribir la declaración manualmente
     f.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n')
     # Escribir el contenido del árbol XML
