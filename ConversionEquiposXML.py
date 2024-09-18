@@ -93,7 +93,7 @@ for uid in column:
     ET.SubElement(title, "text", locale="en_US").text = temp_eq_eng_name
 
     type = ET.SubElement(equipment, "type", pureId="14992", uri="/dk/atira/pure/equipment/equipmenttypes/equipment") 
-    category = ET.SubElement(equipment, "category", uri="/dk/atira/pure/equipment/category/classification") #TODO preguntarle a Francisco qué significa esto
+    category = ET.SubElement(equipment, "category", uri="/dk/atira/pure/equipment/category/classification") 
 
     # person_associations = ET.SubElement(equipment, "personAssociations")
     # person_association = ET.SubElement(person_associations, "personAssociation")
@@ -109,7 +109,7 @@ for uid in column:
 
     # Descriptions
     descriptions = ET.SubElement(equipment, "descriptions")
-    description = ET.SubElement(descriptions, "description", pureId=temp_eq_id) #TODO revisar qué poner en ese pureId
+    description = ET.SubElement(descriptions, "description")
     value = ET.SubElement(description, "value", formatted="false")
     ET.SubElement(value, "text", locale="es_CO").text = temp_eq_es_description
     ET.SubElement(value, "text", locale="en_US").text = temp_eq_eng_description
@@ -129,7 +129,7 @@ for uid in column:
         #TODO preguntarle a Francisco dónde debería ir el modelo
         if temp_eq_fabricante != "":
             manufacturers = ET.SubElement(equipment_detail, "manufacturers")
-            manufacturer = ET.SubElement(manufacturers, "manufacturer", pureId=temp_eq_id) #TODO revisar qué poner en ese pureId
+            manufacturer = ET.SubElement(manufacturers, "manufacturer")
             external_org_unit = ET.SubElement(manufacturer, "externalOrganisationalUnit", uuid="1df83989-a24d-440a-b847-df451e699af0") #TODO uuid como placeholder
             eou_name = ET.SubElement(external_org_unit, "name", formatted="false")
             ET.SubElement(eou_name, "text", locale="es_CO").text = temp_eq_fabricante
@@ -175,9 +175,9 @@ for uid in column:
     
     # Keywords 
     keyword_groups = ET.SubElement(equipment, "keywordGroups")
-    keyword_group = ET.SubElement(keyword_groups, "keywordGroup", logicalName="keywordContainers", pureId=temp_eq_id) #TODO revisar qué poner en ese pureId
+    keyword_group = ET.SubElement(keyword_groups, "keywordGroup", logicalName="keywordContainers")
     keyword_containers = ET.SubElement(keyword_group, "keywordContainers")
-    keyword_container = ET.SubElement(keyword_containers, "keywordContainer", pureId=temp_eq_id) #TODO revisar qué poner en ese pureId
+    keyword_container = ET.SubElement(keyword_containers, "keywordContainer")
     free_keywords = ET.SubElement(keyword_container, "freeKeywords")
     
     # Split keywords and add them to the XML
@@ -190,7 +190,7 @@ tree = ET.ElementTree(result)
 xml_str = ET.tostring(result, encoding="unicode", method="xml")
 
 # Save to a file
-with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_09_13_EQUIPOS_KV_V1.xml', "w", encoding="utf-8") as f:
+with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_09_17_EQUIPOS_KV_V2.xml', "w", encoding="utf-8") as f:
     # Escribir la declaración manualmente
     f.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n')
     # Escribir el contenido del árbol XML
