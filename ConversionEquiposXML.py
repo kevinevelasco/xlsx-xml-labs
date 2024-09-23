@@ -92,7 +92,7 @@ for uid in column:
     ET.SubElement(title, "text", locale="es_CO").text = temp_eq_es_name
     ET.SubElement(title, "text", locale="en_US").text = temp_eq_eng_name
 
-    type = ET.SubElement(equipment, "type", pureId="14992", uri="/dk/atira/pure/equipment/equipmenttypes/equipment") 
+    type = ET.SubElement(equipment, "type", uri="/dk/atira/pure/equipment/equipmenttypes/equipment") 
     category = ET.SubElement(equipment, "category", uri="/dk/atira/pure/equipment/category/classification") 
 
     # person_associations = ET.SubElement(equipment, "personAssociations")
