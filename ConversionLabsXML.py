@@ -126,7 +126,7 @@ for uid in column:
     # TODO placeholder
     ET.SubElement(name, "text", locale="es_CO").text = "Facultad de Ingeniería"
     # TODO placeholder
-    ET.SubElement(name, "text", locale="en_US").text = "Facultad de Ingeniería"
+    ET.SubElement(name, "text", locale="en_US").text = "School of Engineering"
 
 
     # Managing Organizational Unit

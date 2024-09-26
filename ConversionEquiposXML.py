@@ -103,7 +103,7 @@ for uid in column:
     org_unit = ET.SubElement(org_units, "organisationalUnit", externalId="218")
     name = ET.SubElement(org_unit, "name", formatted="false")
     ET.SubElement(name, "text", locale="es_CO").text = "Facultad de Ingeniería" #TODO placeholder
-    ET.SubElement(name, "text", locale="en_US").text = "Facultad de Ingeniería" #TODO placeholder
+    ET.SubElement(name, "text", locale="en_US").text = "School of Engineering" #TODO placeholder
 
 
 
