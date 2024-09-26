@@ -1,7 +1,9 @@
+from urllib.parse import urlparse
 import pandas as pd
 from spacy.language import Language
 from spacy_langdetect import LanguageDetector
 import xml.etree.ElementTree as ET
+import validators
 import datetime
 import numpy as np
 
@@ -46,10 +48,11 @@ for uid in column:
     else:
         temp_project_description = temp_lab_address.replace("\n", " ")
 
-    if (isinstance(temp_lab_url, str)):
+    if (isinstance(temp_lab_url, str) and validators.url(temp_lab_url)):
         temp_lab_url = temp_lab_url
     else:
         temp_lab_url = ""
+
 
     if isinstance(temp_lab_created, datetime.datetime):
         temp_lab_created = temp_lab_created.strftime("%Y-%m-%d")
@@ -246,12 +249,13 @@ for uid in column:
         free_keyword = ET.SubElement(free_keywords_list, "freeKeyword")
         free_keyword.text = keyword.strip()
 
+
 # Convert the ElementTree to a string
 tree = ET.ElementTree(result)
 xml_str = ET.tostring(result, encoding="unicode", method="xml")
 
 # Save to a file
-with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_09_25_LABS_KV_V8.xml', "w", encoding="utf-8") as f:
+with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_09_26_LABS_KV_V9.xml', "w", encoding="utf-8") as f:
     # Escribir la declaración manualmente
     f.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n')
     # Escribir el contenido del árbol XML
