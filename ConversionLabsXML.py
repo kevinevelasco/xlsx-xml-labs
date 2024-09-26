@@ -54,7 +54,7 @@ for uid in column:
     if isinstance(temp_lab_created, datetime.datetime):
         temp_lab_created = temp_lab_created.strftime("%Y-%m-%d")
 
-    # Agrega esta línea para manejar numpy.datetime64
+    # línea para manejar numpy.datetime64
     if isinstance(temp_lab_created, np.datetime64):
         temp_lab_created = str(temp_lab_created.astype('datetime64[D]'))
 
@@ -65,13 +65,13 @@ for uid in column:
     ET.SubElement(title, "text", locale="en_US").text = temp_lab_eng_name
 
     type = ET.SubElement(
-        equipment, "type", uri="/dk/atira/pure/equipment/equipmenttypes/laboratory")
+        equipment, "type", uri="/dk/atira/pure/equipment/equipmenttypes/equipment/laboratory")
     type_term = ET.SubElement(type, "term", formatted = "false")
     ET.SubElement(type_term, "text", locale="en_US").text = "Laboratory"
     ET.SubElement(type_term, "text", locale="es_CO").text = "Laboratorio"
 
     category = ET.SubElement(
-        equipment, "category", uri="/dk/atira/pure/equipment/category/classification")
+        equipment, "category", uri="/dk/atira/pure/equipment/category")
     
     # Descriptions
     descriptions = ET.SubElement(equipment, "descriptions")
@@ -84,6 +84,26 @@ for uid in column:
     description_type_term = ET.SubElement(description_type, "term", formatted="false")
     ET.SubElement(description_type_term, "text", locale="es_CO").text = "Descripción del equipo"
     ET.SubElement(description_type_term, "text", locale="en_US").text = "Equipment description"
+
+
+    # Equipment details
+    equipment_details = ET.SubElement(equipment, "equipmentDetails")
+    equipment_detail = ET.SubElement(equipment_details, "equipmentDetail")
+    name_detail = ET.SubElement(equipment_detail, "name", formatted="true")
+    ET.SubElement(name_detail, "text",
+                  locale="en_US").text = temp_lab_es_name
+    ET.SubElement(name_detail, "text",
+                  locale="es_CO").text = temp_lab_eng_name
+    ids_detail = ET.SubElement(equipment_detail, "ids")
+    ids_detail_id = ET.SubElement(ids_detail, "id")
+    ET.SubElement(ids_detail_id, "value", formatted="false").text = temp_lab_id
+    type_detail = ET.SubElement(ids_detail_id, "type", uri="/dk/atira/pure/equipment/equipmentsources/internalid")
+    type_detail_term = ET.SubElement(type_detail, "term", formatted="false")
+    ET.SubElement(type_detail_term, "text", locale="es_CO").text = "ID interna"
+    ET.SubElement(type_detail_term, "text", locale="en_US").text = "Internal ID"
+    ET.SubElement(equipment_detail, "acquisitionDate").text = temp_lab_created
+    # equipment_details_ids = ET.SubElement(equipment_detail, "ids")
+    # equipment_details_ids_id = ET.SubElement(equipment_details_ids, 
 
 
     person_associations = ET.SubElement(equipment, "personAssociations")
@@ -104,18 +124,6 @@ for uid in column:
     ET.SubElement(name, "text", locale="es_CO").text = "Facultad de Ingeniería"
     # TODO placeholder
     ET.SubElement(name, "text", locale="en_US").text = "Facultad de Ingeniería"
-
-    # Equipment details
-    equipment_details = ET.SubElement(equipment, "equipmentDetails")
-    equipment_detail = ET.SubElement(equipment_details, "equipmentDetail")
-    name_detail = ET.SubElement(equipment_detail, "name", formatted="true")
-    ET.SubElement(name_detail, "text",
-                  locale="es_CO").text = "Detalle en español"
-    ET.SubElement(name_detail, "text",
-                  locale="en_US").text = "Detail in English"
-    ET.SubElement(equipment_detail, "acquisitionDate").text = temp_lab_created
-    # equipment_details_ids = ET.SubElement(equipment_detail, "ids")
-    # equipment_details_ids_id = ET.SubElement(equipment_details_ids, 
 
 
     # Managing Organizational Unit
@@ -141,10 +149,10 @@ for uid in column:
     # Addresses
     addresses = ET.SubElement(equipment, "addresses")
     address = ET.SubElement(addresses, "address")
-    address_type = ET.SubElement(address, "addressType",uri="/dk/atira/pure/equipment/equipmentaddresstype/postal")
-    address_type_term = ET.SubElement(address, "term", formatted="false")
-    ET.SubElement(address_type_term, "text", locale="es_CO").text = "Dirección postal"
-    ET.SubElement(address_type_term, "text", locale="en_US").text = "Postal address"
+    address_type = ET.SubElement(address, "addressType", uri="/dk/atira/pure/equipment/equipmentaddresstype/postal")
+    # address_type_term = ET.SubElement(address, "term", formatted="false")
+    # ET.SubElement(address_type_term, "text", locale="es_CO").text = "Dirección postal"
+    # ET.SubElement(address_type_term, "text", locale="en_US").text = "Postal address"
     ET.SubElement(address, "street").text = temp_lab_address
     # Placeholder
     ET.SubElement(address, "building").text = "Edificio José Gabriel Maldonado S.J.-Laboratorios"
@@ -204,7 +212,9 @@ for uid in column:
     ET.SubElement(loan_type_term, "text", locale="en_US").text = loan_type_english
     ET.SubElement(loan_type_term, "text", locale="es_CO").text = loan_type_spanish
 
-    loan_term = ET.SubElement(equipment, "loanTerm").text = temp_lab_services
+    loan_term = ET.SubElement(equipment, "loanTerm")
+    loan_term_text = ET.SubElement(loan_term, "text", locale="es_CO")
+    loan_term_text.text = temp_lab_services
 
     # parents
     parents_group = ET.SubElement(equipment, "parents")
@@ -228,11 +238,12 @@ for uid in column:
     keyword_containers = ET.SubElement(keyword_group, "keywordContainers")
     keyword_container = ET.SubElement(keyword_containers, "keywordContainer")
     free_keywords = ET.SubElement(keyword_container, "freeKeywords")
+    free_keyword = ET.SubElement(free_keywords, "freeKeyword", locale="es_CO")
+    free_keywords_list = ET.SubElement(free_keyword, "freeKeywords")
 
     # Split keywords and add them to the XML
     for keyword in temp_lab_keywords.split(','):
-        free_keyword = ET.SubElement(
-            free_keywords, "freeKeyword", locale="es_CO")
+        free_keyword = ET.SubElement(free_keywords_list, "freeKeyword")
         free_keyword.text = keyword.strip()
 
 # Convert the ElementTree to a string
@@ -240,7 +251,7 @@ tree = ET.ElementTree(result)
 xml_str = ET.tostring(result, encoding="unicode", method="xml")
 
 # Save to a file
-with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_09_23_LABS_KV_V7.xml', "w", encoding="utf-8") as f:
+with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_09_25_LABS_KV_V8.xml', "w", encoding="utf-8") as f:
     # Escribir la declaración manualmente
     f.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n')
     # Escribir el contenido del árbol XML
