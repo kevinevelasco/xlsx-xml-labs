@@ -41,6 +41,8 @@ for uid in column:
     temp_lab_keywords = temp_lab["Palabras clave"].values[0]
     temp_lab_services = temp_lab["Servicios del Laboratorio"].values[0]
     temp_lab_certifications = temp_lab["Certificaciones"].values[0]
+    temp_lab_type = temp_lab["tipo"].values[0]
+    temp_lab_parent_type= temp_lab["tipo-parent"].values[0]
 
     # Detect empty fields and replacing with empty text
     if (isinstance(temp_lab_address, int) | isinstance(temp_lab_address, float)):
@@ -67,36 +69,40 @@ for uid in column:
     ET.SubElement(title, "text", locale="es_CO").text = temp_lab_es_name
     ET.SubElement(title, "text", locale="en_US").text = temp_lab_eng_name
 
-    type = ET.SubElement(
-        equipment, "type", uri="/dk/atira/pure/equipment/equipmenttypes/equipment/laboratory")
+    type = ET.SubElement(equipment, "type", uri="/dk/atira/pure/equipment/equipmenttypes/equipment/" + temp_lab_type)
     type_term = ET.SubElement(type, "term", formatted = "false")
-    ET.SubElement(type_term, "text", locale="en_US").text = "Laboratory"
-    ET.SubElement(type_term, "text", locale="es_CO").text = "Laboratorio"
+    if temp_lab_type == "laboratory":
+        ET.SubElement(type_term, "text", locale="en_US").text = "Laboratory"
+        ET.SubElement(type_term, "text", locale="es_CO").text = "Laboratorio"
+    elif temp_lab_type == "area":
+        ET.SubElement(type_term, "text", locale="en_US").text = "Area"
+        ET.SubElement(type_term, "text", locale="es_CO").text = "Área"
+    elif temp_lab_type == "academic_unit":
+        ET.SubElement(type_term, "text", locale="en_US").text = "Academic Unit"
+        ET.SubElement(type_term, "text", locale="es_CO").text = "Unidad Académica"
 
-    category = ET.SubElement(
-        equipment, "category", uri="/dk/atira/pure/equipment/category")
+    category = ET.SubElement(equipment, "category", uri="/dk/atira/pure/equipment/category")
     
     # Descriptions
-    descriptions = ET.SubElement(equipment, "descriptions")
-    description = ET.SubElement(descriptions, "description")
-    value = ET.SubElement(description, "value", formatted="false")
-    ET.SubElement(value, "text", locale="es_CO").text = temp_lab_es_description
-    ET.SubElement(
-        value, "text", locale="en_US").text = temp_lab_eng_description
-    description_type = ET.SubElement(description, "type", uri="/dk/atira/pure/equipment/descriptions/equipmentdescription")
-    description_type_term = ET.SubElement(description_type, "term", formatted="false")
-    ET.SubElement(description_type_term, "text", locale="es_CO").text = "Descripción del equipo"
-    ET.SubElement(description_type_term, "text", locale="en_US").text = "Equipment description"
+    if temp_lab_es_description != "" and temp_lab_eng_description != "":
+        descriptions = ET.SubElement(equipment, "descriptions")
+        description = ET.SubElement(descriptions, "description")
+        value = ET.SubElement(description, "value", formatted="false")
+        ET.SubElement(value, "text", locale="es_CO").text = temp_lab_es_description
+        ET.SubElement(value, "text", locale="en_US").text = temp_lab_eng_description
+        description_type = ET.SubElement(description, "type", uri="/dk/atira/pure/equipment/descriptions/equipmentdescription")
+        description_type_term = ET.SubElement(description_type, "term", formatted="false")
+        ET.SubElement(description_type_term, "text", locale="es_CO").text = "Descripción"
+        ET.SubElement(description_type_term, "text", locale="en_US").text = "Description"
 
 
     # Equipment details
     equipment_details = ET.SubElement(equipment, "equipmentDetails")
     equipment_detail = ET.SubElement(equipment_details, "equipmentDetail")
     name_detail = ET.SubElement(equipment_detail, "name", formatted="true")
-    ET.SubElement(name_detail, "text",
-                  locale="en_US").text = temp_lab_es_name
-    ET.SubElement(name_detail, "text",
-                  locale="es_CO").text = temp_lab_eng_name
+    ET.SubElement(name_detail, "text",locale="en_US").text = temp_lab_es_name
+    ET.SubElement(name_detail, "text",locale="es_CO").text = temp_lab_eng_name
+
     ids_detail = ET.SubElement(equipment_detail, "ids")
     ids_detail_id = ET.SubElement(ids_detail, "id")
     ET.SubElement(ids_detail_id, "value", formatted="false").text = temp_lab_id
@@ -209,45 +215,50 @@ for uid in column:
     if temp_lab_certifications != "No aplica":
         # concatenamos las certificaciones a los servicios
         temp_lab_services = temp_lab_services + " " + temp_lab_certifications
+    
+    if temp_lab_services == "":
+        temp_lab_services = "No aplica"
 
     loan_type = ET.SubElement(equipment, "loanType", uri=temp_lab_loan_type)
     loan_type_term = ET.SubElement(loan_type, "term", formatted="false")
     ET.SubElement(loan_type_term, "text", locale="en_US").text = loan_type_english
     ET.SubElement(loan_type_term, "text", locale="es_CO").text = loan_type_spanish
-
-    loan_term = ET.SubElement(equipment, "loanTerm")
+    loan_term = ET.SubElement(equipment, "loanTerm", formatted="true")
     loan_term_text = ET.SubElement(loan_term, "text", locale="es_CO")
     loan_term_text.text = temp_lab_services
 
     # parents
-    parents_group = ET.SubElement(equipment, "parents")
-    parent = ET.SubElement(parents_group, "parent",externalId=temp_lab_area_id)
-    parent_name = ET.SubElement(parent, "name", formatted="false")
-    ET.SubElement(parent_name, "text", locale="es_CO").text = temp_lab_area
-
-    parent_type = ET.SubElement(parent, "type", uri="/dk/atira/pure/equipment/equipmenttypes/equipment/area")
-    parent_type_term = ET.SubElement(parent_type, "term", formatted="false")
-    ET.SubElement(parent_type_term, "text", locale="es_CO").text = "Área"
-    ET.SubElement(parent_type_term, "text", locale="en_US").text = "Area"
+    if temp_lab_parent_type != "":
+        parents_group = ET.SubElement(equipment, "parents")
+        parent = ET.SubElement(parents_group, "parent",externalId=temp_lab_area_id)
+        parent_name = ET.SubElement(parent, "name", formatted="false")
+        ET.SubElement(parent_name, "text", locale="es_CO").text = temp_lab_area
+        parent_type = ET.SubElement(parent, "type", uri="/dk/atira/pure/equipment/equipmenttypes/equipment/" + temp_lab_parent_type)
+        parent_type_term = ET.SubElement(parent_type, "term", formatted="false")
+        if parent_type_term == "area":
+            ET.SubElement(type_term, "text", locale="en_US").text = "Area"
+            ET.SubElement(type_term, "text", locale="es_CO").text = "Área"
+        elif parent_type_term == "academic_unit":
+            ET.SubElement(type_term, "text", locale="en_US").text = "Academic Unit"
+            ET.SubElement(type_term, "text", locale="es_CO").text = "Unidad Académica"
 
     # Keywords
-    keyword_groups = ET.SubElement(equipment, "keywordGroups")
-    keyword_group = ET.SubElement(keyword_groups, "keywordGroup", logicalName="keywordContainers")
-    keyword_group_type = ET.SubElement(keyword_group, "type")
-    keyword_group_type_term = ET.SubElement(keyword_group_type, "term", formatted="false")
-    ET.SubElement(keyword_group_type_term, "text", locale="es_CO").text = "Palabras clave"
-    ET.SubElement(keyword_group_type_term, "text", locale="en_US").text = "Keywords"
-
-    keyword_containers = ET.SubElement(keyword_group, "keywordContainers")
-    keyword_container = ET.SubElement(keyword_containers, "keywordContainer")
-    free_keywords = ET.SubElement(keyword_container, "freeKeywords")
-    free_keyword = ET.SubElement(free_keywords, "freeKeyword", locale="es_CO")
-    free_keywords_list = ET.SubElement(free_keyword, "freeKeywords")
-
-    # Split keywords and add them to the XML
-    for keyword in temp_lab_keywords.split(','):
-        free_keyword = ET.SubElement(free_keywords_list, "freeKeyword")
-        free_keyword.text = keyword.strip()
+    if temp_lab_keywords != "":
+        keyword_groups = ET.SubElement(equipment, "keywordGroups")
+        keyword_group = ET.SubElement(keyword_groups, "keywordGroup", logicalName="keywordContainers")
+        keyword_group_type = ET.SubElement(keyword_group, "type")
+        keyword_group_type_term = ET.SubElement(keyword_group_type, "term", formatted="false")
+        ET.SubElement(keyword_group_type_term, "text", locale="es_CO").text = "Palabras clave"
+        ET.SubElement(keyword_group_type_term, "text", locale="en_US").text = "Keywords"
+        keyword_containers = ET.SubElement(keyword_group, "keywordContainers")
+        keyword_container = ET.SubElement(keyword_containers, "keywordContainer")
+        free_keywords = ET.SubElement(keyword_container, "freeKeywords")
+        free_keyword = ET.SubElement(free_keywords, "freeKeyword", locale="es_CO")
+        free_keywords_list = ET.SubElement(free_keyword, "freeKeywords")
+        # Split keywords and add them to the XML
+        for keyword in temp_lab_keywords.split(','):
+            free_keyword = ET.SubElement(free_keywords_list, "freeKeyword")
+            free_keyword.text = keyword.strip()
 
 
 # Convert the ElementTree to a string
@@ -255,7 +266,7 @@ tree = ET.ElementTree(result)
 xml_str = ET.tostring(result, encoding="unicode", method="xml")
 
 # Save to a file
-with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_09_26_LABS_KV_V9.xml', "w", encoding="utf-8") as f:
+with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_09_30_LABS_KV_V10.xml', "w", encoding="utf-8") as f:
     # Escribir la declaración manualmente
     f.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n')
     # Escribir el contenido del árbol XML
