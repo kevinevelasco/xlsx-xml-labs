@@ -3,6 +3,7 @@ from spacy.language import Language
 from spacy_langdetect import LanguageDetector
 import xml.etree.ElementTree as ET
 import datetime
+import re
 
 #Create Element Tree root class
 result = ET.Element("result")
@@ -91,6 +92,8 @@ for uid in column:
     if(temp_eq_model != ""):    
         temp_eq_es_description = "Modelo: " + str(temp_eq_model) + ". " + temp_eq_es_description
         temp_eq_eng_description = "Model: " + str(temp_eq_model) + ". " + temp_eq_eng_description
+        temp_eq_es_name = temp_eq_es_name + ". Modelo: " + str(temp_eq_model)
+        temp_eq_eng_name = temp_eq_eng_name + ". Model: " + str(temp_eq_model)
 
     equipment= ET.SubElement(items,"equipment", externalId=temp_eq_id)
 
@@ -118,14 +121,15 @@ for uid in column:
 
     # Equipment details
     if temp_eq_adquisicion and temp_eq_baja and temp_eq_fabricante != "":
+        id = re.sub('[^A-Za-z0-9]+', '', str(temp_eq_plaqueta))
         equipment_details = ET.SubElement(equipment, "equipmentDetails")
-        equipment_detail = ET.SubElement(equipment_details, "equipmentDetail")
+        equipment_detail = ET.SubElement(equipment_details, "equipmentDetail", pureId=id)
         name_detail = ET.SubElement(equipment_detail, "name", formatted="true")
         ET.SubElement(name_detail, "text", locale="es_CO").text = temp_eq_es_name
         ET.SubElement(name_detail, "text", locale="en_US").text = temp_eq_eng_name
 
         ids_detail = ET.SubElement(equipment_detail, "ids")
-        ids_detail_id = ET.SubElement(ids_detail, "id")
+        ids_detail_id = ET.SubElement(ids_detail, "id", pureId=id)
         ET.SubElement(ids_detail_id, "value", formatted="false").text = str(temp_eq_plaqueta)
         type_detail = ET.SubElement(ids_detail_id, "type", uri="/dk/atira/pure/equipment/equipmentsources/internalid")
         type_detail_term = ET.SubElement(type_detail, "term", formatted="false")
@@ -136,10 +140,10 @@ for uid in column:
             ET.SubElement(equipment_detail, "acquisitionDate").text = temp_eq_adquisicion
         if temp_eq_baja != "":
             ET.SubElement(equipment_detail, "decommissionDate").text = temp_eq_baja
-        #TODO preguntarle a Francisco dónde debería ir el modelo
         if temp_eq_fabricante != "":
+            id = re.sub('[^A-Za-z0-9]+', '', str(temp_eq_plaqueta))
             manufacturers = ET.SubElement(equipment_detail, "manufacturers")
-            manufacturer = ET.SubElement(manufacturers, "manufacturer")
+            manufacturer = ET.SubElement(manufacturers, "manufacturer", pureId=id)
             external_org_unit = ET.SubElement(manufacturer, "externalOrganisationalUnit")
             eou_name = ET.SubElement(external_org_unit, "name", formatted="false")
             ET.SubElement(eou_name, "text", locale="es_CO").text = temp_eq_fabricante
@@ -247,25 +251,14 @@ for uid in column:
     # Split keywords and add them to the XML
     for keyword in temp_eq_keywords.split(','):
         free_keyword = ET.SubElement(free_keywords_list, "freeKeyword")
-        free_keyword.text = keyword.strip()
-
-    # photos
-    photos = ET.SubElement(equipment, "photos")
-    photo = ET.SubElement(photos, "photo")
-    photo_type = ET.SubElement(photo, "type", uri="/dk/atira/pure/equipment/equipmentfiles/photo")
-    photo_type_term = ET.SubElement(photo_type, "term", formatted="false")
-    ET.SubElement(photo_type_term, "text", locale="en_US").text = "Photo"
-    ET.SubElement(photo_type_term, "text", locale="es_CO").text = "Fotografía"
-    ET.SubElement(photo, "filename").text = str(temp_eq_plaqueta) + ".jpeg"
-    ET.SubElement(photo, "mimetype").text = "image/jpeg"
-    
+        free_keyword.text = keyword.strip()    
 
 # Convert the ElementTree to a string
 tree = ET.ElementTree(result)
 xml_str = ET.tostring(result, encoding="unicode", method="xml")
 
 # Save to a file
-with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_09_30_EQUIPOS_KV_V4.xml', "w", encoding="utf-8") as f:
+with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_11_07_EQUIPOS_KV_V6.xml', "w", encoding="utf-8") as f:
     # Escribir la declaración manualmente
     f.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n')
     # Escribir el contenido del árbol XML
