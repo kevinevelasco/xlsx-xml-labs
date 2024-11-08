@@ -1,0 +1,21 @@
+{
+    "images": [{
+    "fileName": "209217-1.jpeg",
+    "mimeType": "image/jpeg",
+    "size": 184344,
+    "uploadedFile": {
+        "digest": "image/jpeg",
+        "digestType": "image/jpeg",
+        "size": 184344,
+        "mimeType": "image/jpeg"},
+    "fileData": "IkM6XFxVc2Vyc1xcZHVyYW5nb3VmXFxEZXNrdG9wXFxmb3Rvc190ZXN0XFwyMDkyMTctMS5qcGVnIg==",
+    "type": {
+      "uri": "/dk/atira/pure/equipment/equipmentfiles/photo",
+      "term": {
+        "en_US": "Photo",
+        "es_CO": "Fotografía"
+        }
+        }
+    }
+    ]
+}
