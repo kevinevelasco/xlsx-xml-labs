@@ -1,4 +1,8 @@
 <div align="center">
+<p>
+    <img src="https://github.com/user-attachments/assets/818d0879-6c1b-49bb-84c5-92046c68f2b0" width="220" height="240" />
+</p>
+
 
 # **Pontificia Universidad Javeriana**  
 ## *Monitoría Vicerrectoría de la Investigación*  
