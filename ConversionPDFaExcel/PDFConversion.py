@@ -1,4 +1,19 @@
-# importing required classes
+"""
+Autor: Kevin Estiven Velasco Pinto.
+Este script procesa archivos PDF con información estructurada de obras registradas. 
+Permite extraer y organizar datos clave relacionados con:
+- Los datos de las personas (autores, productores, titulares de derechos patrimoniales).
+- La descripción y observaciones de las obras.
+- Datos específicos de registro, como libro, tomo, partida y fecha de registro.
+
+El flujo del script es el siguiente:
+1. Leer todos los archivos PDF de una carpeta específica.
+2. Procesar cada archivo, extrayendo datos textuales con `PyPDF`.
+3. Limpiar y estructurar el texto para identificar secciones relevantes.
+4. Aplicar expresiones regulares para extraer información clave de las obras y las personas.
+5. Almacenar los datos en listas o diccionarios para facilitar su manipulación y exportación.
+"""
+# importar módulos requeridos
 import os
 from pypdf import PdfReader
 import re
@@ -174,7 +189,7 @@ for pdf_file in pdf_files:
 
     print(registro_data)
 
-    # Extracting text from "1. DATOS DE LAS PERSONAS" to "2. DATOS DE LA OBRA"
+    # Extraer texto de "1. DATOS DE LAS PERSONAS" a "2. DATOS DE LA OBRA"
     start = text.find("1. DATOS DE LAS PERSONAS")
     end = text.find("2. DATOS DE LA OBRA")
     if start != -1:
@@ -182,36 +197,36 @@ for pdf_file in pdf_files:
 
     extracted_text = text[start:end]
 
-    # If the text contains "Fecha Registro*", delete that line and the next three lines
+    # Si el texto contiene "Fecha Registro*", borrar esa línea y las siguientes tres líneas
     lines = extracted_text.split("\n")
     for i in range(len(lines)):
         if "Fecha Registro" in lines[i]:
             del lines[i:i+4]
             break
 
-    # Join the remaining lines
+    # Unir las líneas restantes en un solo texto
     extracted_text = "\n".join(lines)
 
-    # Split text by lines
+    # Separar los bloques de texto asociados con cada "Dirección"
     lines = extracted_text.split("\n")
 
-    # Initialize an empty list to store the data
+    # Inicializar variables
     persons_data = []
     current_entry = []
 
-    # Iterate over lines and store the blocks of text associated with each "Dirección"
+    # Iterar sobre líneas y almacenar los bloques de texto asociados con cada "Dirección"
     for line in lines:
-        line = line.strip()  # Clean the line
+        line = line.strip()  # Limpiar espacios en blanco
         if line.startswith("Dirección"):
-            # Add the line with the current address to the ongoing entry
+            # Si ya hay un bloque de texto, guardarlo antes de comenzar uno nuevo
             current_entry.append(line)
-            # Save the completed entry and reset for the next one
+            # Guardar el bloque actual y comenzar uno nuevo
             persons_data.append("\n".join(current_entry))
             current_entry = []
         else:
-            current_entry.append(line)  # Continue adding lines until we find a new "Dirección"
+            current_entry.append(line)  # Añadir la línea al bloque actual
 
-    # Function to process each entry and extract relevant data
+    # Función para procesar cada entrada y extraer datos relevantes
     def process_entry(entry):
         data = {}
         lines = entry.split("\n")
@@ -285,19 +300,19 @@ for pdf_file in pdf_files:
 
         return data
 
-    # Process each entry in persons_data
+    # Procesar cada entrada en personas_data
     processed_data = []
     for entry in persons_data:
         processed_data.append(process_entry(entry))
 
-    # Print the processed data
+    # Imprimir los datos procesados
     for data in processed_data:
         print(data)
         print("-----")
 
     print("El tamaño del arreglo es:", len(persons_data))
 
-    # Simulación de datos procesados (reemplaza con los datos extraídos reales)
+    # Datos procesados finales y extraídos de todo el PDF
     for person in processed_data:
         data = {
             "libro": libro,
@@ -334,3 +349,17 @@ output_path = os.path.join(r'C:\Users\DELL\OneDrive - Pontificia Universidad Jav
 df.to_excel(output_path, index=False)
 
 print(f"Datos de {len(pdf_files)} archivos PDF guardados en: {output_path}")
+
+# Fin del código
+# Nota: Este código es un ejemplo simplificado y puede requerir ajustes adicionales para adaptarse a necesidades específicas.
+# Se recomienda probarlo con diferentes archivos PDF pero con la misma estructura para verificar su funcionamiento y realizar pruebas de validación de datos.
+"""
+Especificación del script:
+- Módulos requeridos: `os`, `pypdf`, `re`, `pandas`.
+- Input: Archivos PDF ubicados en una carpeta definida por `pdf_folder`.
+- Output: Archivo Excel que consolida los datos procesados, ubicado en la misma carpeta.
+- Funcionalidad destacada:
+  - Manejo de expresiones regulares para extraer datos complejos de texto.
+  - Procesamiento de secciones estructuradas con identificación de palabras clave.
+  - Organización de datos en diccionarios y DataFrames para exportación.
+"""

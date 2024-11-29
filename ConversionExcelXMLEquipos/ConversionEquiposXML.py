@@ -1,3 +1,68 @@
+"""
+Autor: Kevin Estiven Velasco Pinto.
+Este script procesa un archivo de Excel para generar un archivo XML estructurado. 
+El propósito es convertir datos relacionados con equipos de infraestructura en un formato que pueda ser 
+consumido por otros sistemas, específicamente Pure, siguiendo un esquema definido.
+
+Módulos:
+    - pandas: Para leer y manipular los datos en el archivo Excel.
+    - spacy.language: Usado para integrarse con el detector de lenguaje (aunque no se utiliza aquí).
+    - spacy_langdetect: Usado para detección de idiomas (aunque no se utiliza aquí).
+    - xml.etree.ElementTree: Para construir y guardar la estructura XML.
+    - datetime: Para manejar y formatear fechas.
+    - re: Para realizar operaciones de expresiones regulares.
+
+El proceso principal del código es:
+    1. Leer un archivo Excel y convertirlo a un DataFrame de pandas.
+    2. Limpiar y procesar los datos, asegurando que los valores ausentes sean reemplazados con valores por defecto.
+    3. Iterar sobre cada equipo identificado por su `id_unico` para generar su respectiva estructura XML.
+    4. Crear nodos XML con atributos y datos obtenidos del DataFrame, incluyendo validaciones específicas como la comprobación 
+    de URLs y la conversión de fechas.
+    5. Incorporar sub-elementos XML que representen detalles como nombres, descripciones, categorías, direcciones, teléfonos,
+    personas asociadas, y más.
+
+Variables Globales:
+    - `result`: Elemento raíz del XML.
+    - `items`: Subnodo de `result` que contendrá la información procesada.
+
+Funciones:
+    No hay funciones explícitas; el procesamiento ocurre directamente en el flujo principal del script.
+
+Atributos específicos procesados del archivo Excel incluyen:
+- Identificación única del equipo (`id_ubicacion`).
+- Identificador y nombre del laboratorio (`id-lab`, `Espacio ubicación`).
+- Información detallada del equipo:
+  - Nombres y descripciones en español e inglés (`Nombre equipo español`, `Descripción español`, etc.).
+  - Identificador de plaqueta de activos fijos.
+  - Fechas relacionadas con adquisición y baja (`Fecha de adquisición`, `Fecha estimada baja`).
+  - Responsable del equipo (`Id SIU responsable`, `nombre SIU responsable`).
+  - Modelo, fabricante, país de fabricación.
+  - Disponibilidad para préstamo, palabras clave, servicios y tipo de equipo.
+- Relación con tipos de equipo y datos organizacionales.
+
+El XML generado incluye elementos y sub-elementos organizados jerárquicamente para representar atributos como:
+- `equipment`: Nodo raíz para cada equipo.
+- `title`: Títulos en español e inglés del equipo.
+- `type`: Tipo de equipo (e.g., equipo, instrumento, dispositivo).
+- `descriptions`: Descripciones en diferentes idiomas.
+- `equipmentDetails`: Detalles del equipo, incluyendo modelo y fabricante.
+- `loanType`: Disponibilidad para préstamo interno, externo o ambos.
+- `keywords`: Palabras clave relacionadas con el equipo.
+- `services`: Servicios asociados al equipo.
+
+Validaciones y transformaciones:
+- Fechas de adquisición y baja se convierten al formato `YYYY-MM-DD` si son válidas.
+- Descripciones y títulos se complementan con información adicional, como modelo y fabricante.
+- Campos vacíos o inválidos, como palabras clave o descripciones no proporcionadas, son manejados adecuadamente.
+
+Notas:
+- Este código asume que el archivo Excel contiene todas las columnas necesarias. Si falta alguna columna, 
+  podría generar errores.
+- Algunos valores, como el tipo de equipo y su relación jerárquica, son placeholders que pueden requerir ajuste 
+  según los datos reales.
+- La estructura final del XML se guarda en la variable `result` y puede ser exportada o utilizada según sea necesario.
+"""
+
 import pandas as pd
 from spacy.language import Language
 from spacy_langdetect import LanguageDetector
@@ -5,18 +70,28 @@ import xml.etree.ElementTree as ET
 import datetime
 import re
 
-#Create Element Tree root class
+# Crear el nodo raíz del XML
+"""
+Inicializa la estructura XML con los nodos `result` e `items`. Se configuran atributos de esquema.
+"""
 result = ET.Element("result")
 result.set('xmlns:xsi',"http://www.w3.org/2001/XMLSchema-instance")
 result.set('xsi:schemaLocation',"http://localhost:8080/ws/api/524/xsd/schema1.xsd")
 items = ET.SubElement(result,"items")
 
-# Read excel and convert to dataframe
+# Leer el archivo de Excel y convertirlo en un DataFrame
+"""
+Carga datos desde un archivo de Excel y realiza operaciones preliminares de limpieza, como rellenar valores nulos.
+"""
 dataframe1 = pd.read_excel(
     r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Excel\Formato Infraestructura - Perfiles y Capacidades - Ajustado.xlsx', sheet_name='Equipos', dtype=object)
 dataframe1 = dataframe1.fillna('')
 column = dataframe1.id_ubicacion.unique()
 
+# Procesar cada ubicación única
+"""
+Itera sobre las ubicaciones únicas en el DataFrame y genera nodos XML basados en los datos relacionados.
+"""
 for uid in column:
     #Create Element Tree root class
     temp_eq = dataframe1[dataframe1["id_ubicacion"]==uid]
@@ -41,6 +116,10 @@ for uid in column:
     temp_eq_type = temp_eq["tipo"].values[0]
     temp_eq_parent_type = temp_eq["tipo-parent"].values[0]
 
+    # Validación y formateo de descripciones
+    """
+    Maneja las descripciones en español e inglés, verificando si son válidas y ajustándolas según el modelo.
+    """
     if (isinstance(temp_eq_es_description,str)):
         temp_eq_es_description = temp_eq_es_description
     else:
@@ -51,6 +130,10 @@ for uid in column:
     else:
         temp_eq_eng_description = ""
 
+    # Formatear fechas
+    """
+    Convierte fechas de adquisición y baja a formato `YYYY-MM-DD`, si son válidas.
+    """
     if isinstance(temp_eq_adquisicion, datetime.datetime):
         temp_eq_adquisicion = temp_eq_adquisicion.strftime("%Y-%m-%d")
     else:
@@ -61,7 +144,10 @@ for uid in column:
     else: 
         temp_eq_baja = ""
 
-
+    # Validación de otros campos
+    """
+    Limpia y verifica el contenido de los campos del modelo y fabricante.
+    """
     if isinstance(temp_eq_model, str):
         temp_eq_model = temp_eq_model
     else:
@@ -95,19 +181,27 @@ for uid in column:
         temp_eq_es_name = temp_eq_es_name + ". Modelo: " + str(temp_eq_model)
         temp_eq_eng_name = temp_eq_eng_name + ". Model: " + str(temp_eq_model)
 
+    # Crear nodos XML para el equipo
+    """
+    Construye el nodo XML `equipment` y sus subnodos, incorporando títulos, descripciones, detalles y asociaciones.
+    """
     equipment= ET.SubElement(items,"equipment", externalId=temp_eq_id)
 
+    # Añadir títulos en múltiples idiomas
     title = ET.SubElement(equipment, "title", formatted="true")
     ET.SubElement(title, "text", locale="es_CO").text = temp_eq_es_name
     ET.SubElement(title, "text", locale="en_US").text = temp_eq_eng_name
 
+    # Añadir tipo de equipo
     type = ET.SubElement(equipment, "type", uri="/dk/atira/pure/equipment/equipmenttypes/equipment/" + temp_eq_type)
     type_term = ET.SubElement(type, "term", formatted = "false")
     ET.SubElement(type_term, "text", locale="en_US").text = "Equipment"
     ET.SubElement(type_term, "text", locale="es_CO").text = "Equipo"
 
+    # Añadir categoría
     category = ET.SubElement(equipment, "category", uri="/dk/atira/pure/equipment/category") 
 
+    # Añadir descripciones
     descriptions = ET.SubElement(equipment, "descriptions")
     description = ET.SubElement(descriptions, "description")
     value = ET.SubElement(description, "value", formatted="false")
@@ -119,7 +213,7 @@ for uid in column:
     ET.SubElement(description_type_term, "text", locale="en_US").text = "Equipment description"
 
 
-    # Equipment details
+    # Añadir detalles del equipo
     if temp_eq_adquisicion and temp_eq_baja and temp_eq_fabricante != "":
         id = re.sub('[^A-Za-z0-9]+', '', str(temp_eq_plaqueta))
         equipment_details = ET.SubElement(equipment, "equipmentDetails")
@@ -136,11 +230,14 @@ for uid in column:
         ET.SubElement(type_detail_term, "text", locale="es_CO").text = "ID interna"
         ET.SubElement(type_detail_term, "text", locale="en_US").text = "Internal ID"
 
+        #Validar si la fecha de adquisición, baja no están vacías, para asignarlas 
         if temp_eq_adquisicion != "":
             ET.SubElement(equipment_detail, "acquisitionDate").text = temp_eq_adquisicion
         if temp_eq_baja != "":
             ET.SubElement(equipment_detail, "decommissionDate").text = temp_eq_baja
         if temp_eq_fabricante != "":
+
+            #Si no está vacío el fabricante, se procede a llenar sus detalles
             id = re.sub('[^A-Za-z0-9]+', '', str(temp_eq_plaqueta))
             manufacturers = ET.SubElement(equipment_detail, "manufacturers")
             manufacturer = ET.SubElement(manufacturers, "manufacturer", pureId=id)
@@ -151,8 +248,8 @@ for uid in column:
             eou_type_term = ET.SubElement(eou_type, "term", formatted="false")
             ET.SubElement(eou_type_term, "text", locale="es_CO").text = "Sin especificar"
             ET.SubElement(eou_type_term, "text", locale="en_US").text = "Unknown"
-            #TODO preguntar a Francisco cómo poner el país del fabricante o si omitirlo
 
+    # Información sobre las personas y sus asociaciones
     person_associations = ET.SubElement(equipment, "personAssociations")
     person_association = ET.SubElement(person_associations, "personAssociation")
     ET.SubElement(person_association, "person", externalId=str(temp_eq_siu))
@@ -160,17 +257,14 @@ for uid in column:
     person_org_units = ET.SubElement(person_association, "organisationalUnits")
     person_org_unit = ET.SubElement(person_org_units, "organisationalUnit", externalId="218")
     
-
+    # Unidades organizacionales de los equipos
     org_units = ET.SubElement(equipment, "organisationalUnits")
     org_unit = ET.SubElement(org_units, "organisationalUnit", externalId="218")
     name = ET.SubElement(org_unit, "name", formatted="false")
-    # TODO placeholder
     ET.SubElement(name, "text", locale="es_CO").text = "Facultad de Ingeniería"
-    # TODO placeholder
     ET.SubElement(name, "text", locale="en_US").text = "School of Engineering"
     
     # Managing Organizational Unit
-    #TODO todo aquí es un placeholder de la Facultad de Ingeniería
     managing_org_unit = ET.SubElement(
         equipment, "managingOrganisationalUnit", externalId="218", externallyManaged="true")
     name_org = ET.SubElement(managing_org_unit, "name", formatted="false")
@@ -183,7 +277,7 @@ for uid in column:
     ET.SubElement(type_org_term, "text", locale="es_CO").text = "Facultad"
     ET.SubElement(type_org_term, "text", locale="en_US").text = "Faculty"
 
-    # Contact Persons
+    # Personas de contacto
     contact_persons = ET.SubElement(equipment, "contactPersons")
     contact_person = ET.SubElement(
         contact_persons, "contactPerson", externalId=str(temp_eq_siu), externalIdSource="synchronisedPerson",externallyManaged="true")
@@ -191,9 +285,7 @@ for uid in column:
     ET.SubElement(name_contact, "text").text = temp_eq_nombre_siu
 
 
-    # Loan Type
-    #set to lowercase and trim any space
-    
+    # Tipo de préstamo
     temp_eq_loan_type = temp_eq_loan_type.lower().strip()
     loan_type_spanish = ""
     loan_type_english = ""
@@ -223,48 +315,53 @@ for uid in column:
         loan_term_text = ET.SubElement(loan_term, "text", locale="es_CO")
         loan_term_text.text = temp_lab_services
 
-    #parents
+    #Parents de los Equipos, es decir los Laboratorios
     parents_group = ET.SubElement(equipment, "parents")
     parent = ET.SubElement(parents_group, "parent", externalId=temp_eq_id_lab)
     parent_name = ET.SubElement(parent, "name", formatted="false")
     ET.SubElement(parent_name, "text", locale="es_CO").text = temp_eq_lab_es_name
-
     parent_type = ET.SubElement(parent, "type", uri="/dk/atira/pure/equipment/equipmenttypes/equipment/" + temp_eq_parent_type)
     parent_type_term = ET.SubElement(parent_type, "term", formatted="false")
     ET.SubElement(parent_type_term, "text", locale="es_CO").text = "Laboratorio"
     ET.SubElement(parent_type_term, "text", locale="en_US").text = "Laboratory"
     
-    # Keywords
+    # Palabras clave en español e inglés
     keyword_groups = ET.SubElement(equipment, "keywordGroups")
     keyword_group = ET.SubElement(keyword_groups, "keywordGroup", logicalName="keywordContainers")
     keyword_group_type = ET.SubElement(keyword_group, "type")
     keyword_group_type_term = ET.SubElement(keyword_group_type, "term", formatted="false")
     ET.SubElement(keyword_group_type_term, "text", locale="es_CO").text = "Palabras clave"
     ET.SubElement(keyword_group_type_term, "text", locale="en_US").text = "Keywords"
-
     keyword_containers = ET.SubElement(keyword_group, "keywordContainers")
     keyword_container = ET.SubElement(keyword_containers, "keywordContainer")
     free_keywords = ET.SubElement(keyword_container, "freeKeywords")
     free_keyword = ET.SubElement(free_keywords, "freeKeyword", locale="es_CO")
     free_keywords_list = ET.SubElement(free_keyword, "freeKeywords")
     
-    # Split keywords and add them to the XML
+    # Por cada palabra clave del Excel, se añade en el XML
     for keyword in temp_eq_keywords.split(','):
         free_keyword = ET.SubElement(free_keywords_list, "freeKeyword")
         free_keyword.text = keyword.strip()    
 
-# Convert the ElementTree to a string
+# Crear el árbol XML y guardar en un archivo
 tree = ET.ElementTree(result)
 xml_str = ET.tostring(result, encoding="unicode", method="xml")
 
-# Save to a file
+# Guardar el archivo XML
 with open(r'C:\Users\DELL\OneDrive - Pontificia Universidad Javeriana\Gestión Monitores Perfiles\Infraestructura\Resultado\2024_11_07_EQUIPOS_KV_V6.xml', "w", encoding="utf-8") as f:
     # Escribir la declaración manualmente
     f.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n')
     # Escribir el contenido del árbol XML
     f.write(xml_str)
 
-print("xml generado")
+print("XML generado")
+
+# Fin del script
+# Nota: Este código es un ejemplo simplificado y puede requerir ajustes adicionales para adaptarse a necesidades específicas.
+'''
+Al finalizar el script se genera un archivo XML con la estructura y los datos procesados.
+Todos los archivos generados se encuentran en la carpeta .../Infraestructura/Resultado/.
+'''
 
 
 
